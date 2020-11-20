@@ -1,0 +1,5 @@
+- name: Install Maildrop
+  package:
+    name:
+      - maildrop
+    state: present

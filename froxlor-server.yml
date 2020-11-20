@@ -1,0 +1,49 @@
+- name: Set the stage
+  hosts: target
+  become: yes
+  roles:
+    - ansible-python-tools
+    - update-upgrade
+    - restart-server
+    - change-to-bash
+    # - apparmor-disabled
+    - sendmail-disabled
+- name: Install and secure packages
+  hosts: target
+  become: yes
+  roles:
+    - mariadb-installed
+    - apache-installed
+    - php-installed
+    # - php-fcgid-installed
+    - phpmyadmin-installed
+    - dovecot-installed
+    - postfix-installed
+    - pureftpd-quota-installed
+    - bind-dns-server-installed
+    - maildrop-installed
+    - awstats-installed
+    - froxlor-installed
+
+
+
+
+
+# This is more to come...
+# Not configured yet
+    # - install-virus-protection
+    # - install-spam-protection
+    # - install-webserver-etc
+    # - enable-ruby
+    # - enable-php-opcode-cache
+    # - install-php-fpm
+    # - install-hiphop-vm
+    # - install-lets-encrypt
+    # - install-mailman
+    # - install-bind-dns-server
+    # - install-vlogger-webalizer-awstats
+    # - install-jailkit
+    # - install-fail2ban
+    # - install-ufw
+    # - install-roundcube
+    # - install-isp-config

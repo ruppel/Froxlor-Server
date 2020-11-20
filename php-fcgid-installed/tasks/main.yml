@@ -1,0 +1,27 @@
+- name: Install packages for php-fcgid
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+      - libnss-extrausers
+      - nscd
+      - libapache2-mod-fcgid
+      - apache2-suexec-custom
+      - php-cgi
+- name: Disable mod_php
+  #  community.general.apache2_module:
+  apache2_module:
+    name: php
+    state: absent
+- name: Enable apache modules
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+      - fcgid
+      - actions
+      - suexec
+- name: Restart Apache service
+  service:
+    name: apache2
+    state: restarted

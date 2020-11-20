@@ -1,0 +1,23 @@
+all:
+   hosts:
+      target:
+         ansible_host: 192.168.1.100
+         ansible_connection: ssh
+         ansible_port: 22765
+         ansible_user: william
+         ansible_python_interpreter: /usr/bin/python3
+         ansible_become_password: SecretPasswordReally
+         froxlor:
+            hostname: "mytopleveldomain-for-example.com"
+            admin_user: "admin"
+            admin_password: "MuchMoreSecretOne"
+            www_user: froxlorlocal
+            www_group: froxlorlocal
+            db_name: froxlor
+            db_user: froxlor
+            db_user_pass: "AlsoKindOfSecret"
+         mail:
+            system_mail_name: "mail.{{ froxlor.hostname }}"
+            postmaster_email: "webmaster@{{ froxlor.hostname }}"
+         mysql:
+            root_password: "VerySecretPassword"

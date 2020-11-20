@@ -1,0 +1,39 @@
+- name: Install MariaDB
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+      - mariadb-client
+      - mariadb-server
+- name: We want MySQL to listen on all interfaces
+  lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: "^bind-address           = 127.0.0.1$"
+    line: "#bind-address           = 127.0.0.1"
+- name: Mysql secure installation script
+  expect:
+    command: mysql_secure_installation
+    echo: yes
+    timeout: 15
+    responses:
+      (.*)Enter current password for root \(enter for none\)(.*): ""
+      (.*)Set root password\? \[Y/n\](.*): "y"
+      (.*)New password(.*): "{{ mysql.root_password }}"
+      (.*)Re-enter new password(.*): "{{ mysql.root_password }}"
+      (.*)Remove anonymous users\? \[Y/n\](.*): "y"
+      (.*)Disallow root login remotely\? \[Y/n\](.*): "y"
+      (.*)Remove test database and access to it\? \[Y/n\](.*): "y"
+      (.*)Reload privilege tables now\? \[Y/n\](.*): "y"
+- name: Set the password authentication method in MariaDB to native
+  command: echo "update mysql.user set plugin = 'mysql_native_password' where user='root';" | mysql -u root -p {{ mysql.root_password }}
+- name: Set mariadb password in debian.cnf
+  replace:
+    path: /etc/mysql/debian.cnf
+    regexp: "^password = $"
+    replace: "password = {{ mysql.root_password }}"
+- name: Enable root login
+  command: mysql -u root -h localhost mysql --execute "UPDATE user SET plugin='mysql_native_password' WHERE User='root'; FLUSH PRIVILEGES;"
+- name: Restart mariadb
+  service:
+    name: mysql
+    state: restarted

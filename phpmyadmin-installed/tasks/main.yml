@@ -1,0 +1,12 @@
+- name: Install PHPMyAdmin
+  package:
+    name: phpmyadmin
+    state: present
+- name: Reconfigure PHPMyAdmin to our needs
+  expect:
+    command: dpkg-reconfigure -f readline phpmyadmin
+    echo: yes
+    timeout: 15
+    responses:
+      (.*)Reinstall database for phpmyadmin\? \[yes/no\](.*): "no"
+      (.*)Web server to reconfigure automatically(.*): "1"

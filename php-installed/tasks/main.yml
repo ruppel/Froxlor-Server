@@ -1,0 +1,17 @@
+- name: Install PHP and stuff
+  package:
+    name:
+      - php
+      - php-cli
+      - php-bcmath
+      - php-curl
+      - php-json
+      - php-mbstring
+      - php-mysql
+      - php-xml
+      - php-zip
+      - libapache2-mod-php
+      - php-gd
+      - php-imap
+    state: present
+

@@ -1,0 +1,49 @@
+- name: Install Apache
+  package:
+    name: apache2
+    state: present
+- name: Set DocumentRoot to /var/www
+  lineinfile:
+    path: /etc/apache2/sites-available/000-default.conf
+    regexp: '^(\s*)DocumentRoot\s.*'
+    line: '\1DocumentRoot /var/www'
+    backrefs: yes
+- name: Adjust Security Configuration
+  lineinfile:
+    path: /etc/apache2/conf-available/security.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - name: ServerTokens to Prod
+      regexp: '^(\s*)ServerTokens(\s+)(.*)'
+      line: "ServerTokens Prod"
+    - name: ServerSignature to Off
+      regexp: '^(\s*)ServerSignature(\s+)(.*)'
+      line: "ServerSignature Off"
+  loop_control: 
+    label: "{{ item.name }}"      
+- name: Restart Apache service
+  service:
+    name: apache2
+    state: restarted
+- name: Add apache modules
+  #  community.general.apache2_module:
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - suexec
+    - rewrite
+    - ssl
+    - actions
+    - include
+- name: Protect against the HTTPOXY vulnerability
+  copy:
+    src: httpoxy.conf
+    dest: /etc/apache2/conf-available/httpoxy.conf
+- name: Enable httpoxy.conf for apache
+  command: a2enconf httpoxy
+- name: Restart Apache service
+  service:
+    name: apache2
+    state: restarted

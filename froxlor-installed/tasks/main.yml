@@ -1,0 +1,90 @@
+- name: Install missing additional packages
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+      - libsasl2-modules-sql
+- name: Load latest Froxlor release
+  unarchive:
+    src: http://files.froxlor.org/releases/froxlor-latest.tar.gz
+    dest: /var/www
+    remote_src: yes
+- name: Change ownership of froxlor directory
+  file:
+    path: /var/www/froxlor
+    state: directory
+    recurse: yes
+    owner: www-data
+    group: www-data
+- name: Restart Apache service
+  service:
+    name: apache2
+    state: restarted
+- name: Initial setup for froxlor
+  uri:
+    url: http://{{ ansible_host }}/froxlor/install/install.php?check=1
+    method: POST
+    body_format: form-urlencoded
+    body:
+      language: "german"
+      mysql_host: "127.0.0.1"
+      mysql_database: "{{ froxlor.db_name }}"
+      mysql_unpriv_user: "{{ froxlor.db_user }}"
+      mysql_unpriv_pass: "{{ froxlor.db_user_pass }}"
+      mysql_root_user: "root"
+      mysql_root_pass: "{{ mysql.root_password }}"
+      admin_user: "{{ froxlor.admin_user }}"
+      admin_pass1: "{{ froxlor.admin_password }}"
+      admin_pass2: "{{ froxlor.admin_password }}"
+      check: "1"
+      distribution: "focal"
+      Webserver: "apache24"
+      servername: "{{ froxlor.hostname }}"
+      serverip: "{{ ansible_host }}"
+      httpuser: "www-data"
+      httpgroup: "www-data"
+      installstep: "1"
+    status_code: 200
+- name: create temporary file for the configuration
+  tempfile:
+    state: file
+    suffix: temp
+  register: tempfile
+- name: Fill the config
+  lineinfile:
+    path: "{{ tempfile.path }}"
+    line: "{{ item }}"
+  loop:
+    - '{"distro":"focal",'
+    - '"http":"apache24",'
+    - '"dns":"bind",'
+    - '"smtp":"postfix_dovecot",'
+    - '"mail":"dovecot_postfix2",'
+    - '"ftp":"pureftpd",'
+    - '"system":["cron","awstats","libnssextrausers","logrotate","fcgid"]}'
+- name: Append setup to froxlor
+  expect:
+    command: 'php /var/www/froxlor/install/scripts/config-services.php --froxlor-dir=/var/www/froxlor/ --apply={{ tempfile.path }}'
+    responses:
+      '^Do you want to continue? [Y/n]': "Y"
+- name: Delete temp file
+  file:
+    path: "{{ tempfile.path }}"
+    state: absent
+- name: Add user for froxlor
+  user:
+    name: "{{ froxlor.www_user }}"
+    shell: /bin/false
+    expires: -1
+# - name: Change ownership of froxlor directory
+#   file:
+#     path: /var/www/froxlor
+#     state: directory
+#     recurse: yes
+#     owner: "{{ froxlor.www_user }}"
+#     group: "{{ froxlor.www_group }}"
+# - name: Restart Apache service
+#   service:
+#     name: apache2
+#     state: restarted
+
